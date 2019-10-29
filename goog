@@ -1,0 +1,228 @@
+#!/usr/bin/python
+'''
+This is a command line utility to work with the Google API's for Drive, Docs, and Sheets.
+'''
+
+
+# import standard libraries
+from __future__ import print_function
+import argparse
+import io
+import os.path
+import pickle
+
+# Import Google libraries
+import googleapiclient.errors
+from googleapiclient.http import MediaIoBaseDownload
+from googleapiclient.discovery import build
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
+
+# If modifying these scopes, delete the goog.token.pickle file.
+SCOPES = ['https://www.googleapis.com/auth/drive.metadata.readonly',
+          'https://www.googleapis.com/auth/drive.file',
+          'https://www.googleapis.com/auth/documents.readonly',
+          'https://www.googleapis.com/auth/drive.readonly']
+TOKEN_FILE = 'goog.token.pickle'
+CREDS = None
+FILE_IDS = []
+
+def drive_find(query, id_only = False):
+  '''
+  Find files in Google Drive
+  '''
+  global CREDS
+  global FILE_IDS
+
+  drive_service = build('drive', 'v3', credentials=CREDS)
+  page_token = None
+  
+  try:
+    while True:
+      if query is not None:
+        response = drive_service.files().list(q="%s" % query,
+                                              spaces='drive',
+                                              fields='nextPageToken, files(id, name)',
+                                              pageToken=page_token).execute()
+      else:
+        response = drive_service.files().list(spaces='drive',
+                                              fields='nextPageToken, files(id, name)',
+                                              pageToken=page_token).execute()
+      for file in response.get('files', []):
+        if id_only is False:
+          print('name="%s", id="%s"' % (file.get('name'), file.get('id')))
+        else:
+          FILE_IDS.append(file.get('id'))
+      page_token = response.get('nextPageToken', None)
+      if page_token is None:
+        break
+  except googleapiclient.errors.HttpError as error:
+    print(error)
+
+
+def auth():
+  '''
+  Authenticate to the Google API
+  '''
+  global CREDS
+  if os.path.exists(TOKEN_FILE):
+    with open(TOKEN_FILE, 'rb') as token:
+      CREDS = pickle.load(token)
+
+  if not CREDS or not CREDS.valid:
+    if CREDS and CREDS.expired and CREDS.refresh_token:
+      CREDS.refresh(Request())
+    else:
+      flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
+      CREDS = flow.run_local_server()
+
+    with open(TOKEN_FILE, 'wb') as token:
+      pickle.dump(CREDS, token)
+
+
+def docs(args):
+  '''
+  Work with Google docs
+  '''
+  global CREDS
+
+  print("[*] we're in the docs function")
+  if args.find:
+    print("[*] and you asked for the find function")
+  return
+
+def drive(args):
+  '''
+  Work with Google drive
+  '''
+  global CREDS
+  global FILE_IDS
+
+  if args.list:
+    drive_find(None)
+
+  if args.find_by_name:
+    drive_find("name contains '%s'" % args.find_by_name[0])
+
+  if args.find_by_content:
+    drive_find("fullText contains '%s'" % args.find_by_content[0])
+
+  if args.download:
+    drive_find(query = "name = '%s'" % args.download[0], id_only = True)
+
+    if len(FILE_IDS) > 1:
+      print("[!] more than one document found with that name")
+      return
+
+    drive_service = build('drive', 'v3', credentials=CREDS)
+    request = drive_service.files().export_media(fileId=FILE_IDS[0])
+    buff = io.BytesIO()
+    downloader = MediaIoBaseDownload(buff, request)
+    done = False
+    while done is False:
+      status, done = downloader.next_chunk()
+    
+    try:
+      fh = open(args.download[0], 'wb')
+      fh.write(buff.getvalue())
+      fh.close()
+    except:
+      print("[!] failed to save file")
+      return
+
+  if args.export_pdf:
+    drive_find(query = "name = '%s'" % args.export_pdf[0], id_only = True)
+
+    if len(FILE_IDS) > 1:
+      print("[!] more than one document found with that name")
+      return
+
+    drive_service = build('drive', 'v3', credentials=CREDS)
+    request = drive_service.files().export_media(fileId=FILE_IDS[0], mimeType='application/pdf')
+    buff = io.BytesIO()
+    downloader = MediaIoBaseDownload(buff, request)
+    done = False
+    while done is False:
+      status, done = downloader.next_chunk()
+    
+    pdf_name = args.export_pdf[0] + '.pdf'
+    try:
+      fh = open(pdf_name, 'wb')
+      fh.write(buff.getvalue())
+      fh.close()
+    except:
+      print("[!] failed to save file")
+      return
+
+  if args.export_json:
+    drive_find(query = "name = '%s'" % args.export_json[0], id_only = True)
+
+    if len(FILE_IDS) > 1:
+      print("[!] more than one document found with that name")
+      return
+
+    drive_service = build('drive', 'v3', credentials=CREDS)
+    request = drive_service.files().export_media(fileId=FILE_IDS[0], mimeType='text/csv')
+    buff = io.BytesIO()
+    downloader = MediaIoBaseDownload(buff, request)
+    done = False
+    while done is False:
+      status, done = downloader.next_chunk()
+    
+    json_name = args.export_json[0] + '.json'
+    try:
+      fh = open(json_name, 'wb')
+      fh.write(buff.getvalue())
+      fh.close()
+    except:
+      print("[!] failed to save file")
+      return
+
+
+
+def sheets(args):
+  '''
+  Work with Google drive
+  '''
+  global CREDS
+
+  print("[*] we're in the sheets function")
+  return
+
+
+def main():
+
+  # parse args
+  parser = argparse.ArgumentParser()
+  subparsers = parser.add_subparsers(help='Available sub-commands')
+
+  parser_docs = subparsers.add_parser('docs', help='Work with Google Docs')
+  parser_docs.add_argument("--find", metavar='PATTERN', nargs=1, help="Find a Google document")
+  parser_docs.set_defaults(func=docs)
+
+  parser_drive = subparsers.add_parser('drive', help='Work with Google Drive')
+  parser_drive.add_argument("--download", metavar='FILE', nargs=1, help="Download a document")
+  parser_drive.add_argument("--export-json", metavar='FILE', nargs=1, help="Export a document to JSON format")
+  parser_drive.add_argument("--export-pdf", metavar='FILE', nargs=1, help="Export a document to pdf format")
+  parser_drive.add_argument("--find-by-content", metavar='PATTERN', nargs=1, help="Find a Drive file containing content")
+  parser_drive.add_argument("--find-by-name", metavar='PATTERN', nargs=1, help="Find a Drive file by name")
+  parser_drive.add_argument("--list", action='store_true', help="List all Drive files you have access to")
+  parser_drive.set_defaults(func=drive)
+
+  parser_sheets = subparsers.add_parser('sheets', help='Work with Google Sheets')
+  parser_sheets.add_argument("--find", metavar='PATTERN', nargs=1, help="Find a Google spreadsheet")
+  parser_sheets.set_defaults(func=sheets)
+
+  args = parser.parse_args()
+
+  # authenticate
+  auth()
+
+  # call relevant function
+  args.func(args)
+
+
+if __name__ == "__main__":
+  main()
+
+
