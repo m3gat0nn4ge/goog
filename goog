@@ -102,13 +102,13 @@ def drive(args):
     drive_find(None)
 
   if args.find_by_name:
-    drive_find("name contains '%s'" % args.find_by_name[0])
+    drive_find("name contains '%s'" % args.find_by_name)
 
   if args.find_by_content:
-    drive_find("fullText contains '%s'" % args.find_by_content[0])
+    drive_find("fullText contains '%s'" % args.find_by_content)
 
   if args.download:
-    drive_find(query = "name = '%s'" % args.download[0], id_only = True)
+    drive_find(query = "name = '%s'" % args.download, id_only = True)
 
     if len(FILE_IDS) > 1:
       print("[!] more than one document found with that name")
@@ -123,7 +123,7 @@ def drive(args):
       status, done = downloader.next_chunk()
     
     try:
-      fh = open(args.download[0], 'wb')
+      fh = open(args.download, 'wb')
       fh.write(buff.getvalue())
       fh.close()
     except:
@@ -131,7 +131,7 @@ def drive(args):
       return
 
   if args.export_pdf:
-    drive_find(query = "name = '%s'" % args.export_pdf[0], id_only = True)
+    drive_find(query = "name = '%s'" % args.export_pdf, id_only = True)
 
     if len(FILE_IDS) > 1:
       print("[!] more than one document found with that name")
@@ -145,7 +145,7 @@ def drive(args):
     while done is False:
       status, done = downloader.next_chunk()
     
-    pdf_name = args.export_pdf[0] + '.pdf'
+    pdf_name = args.export_pdf + '.pdf'
     try:
       fh = open(pdf_name, 'wb')
       fh.write(buff.getvalue())
@@ -155,7 +155,7 @@ def drive(args):
       return
 
   if args.export_json:
-    drive_find(query = "name = '%s'" % args.export_json[0], id_only = True)
+    drive_find(query = "name = '%s'" % args.export_json, id_only = True)
 
     if len(FILE_IDS) > 1:
       print("[!] more than one document found with that name")
@@ -169,7 +169,7 @@ def drive(args):
     while done is False:
       status, done = downloader.next_chunk()
     
-    json_name = args.export_json[0] + '.json'
+    json_name = args.export_json + '.json'
     try:
       fh = open(json_name, 'wb')
       fh.write(buff.getvalue())
@@ -197,20 +197,20 @@ def main():
   subparsers = parser.add_subparsers(help='Available sub-commands')
 
   parser_docs = subparsers.add_parser('docs', help='Work with Google Docs')
-  parser_docs.add_argument("--find", metavar='PATTERN', nargs=1, help="Find a Google document")
+  parser_docs.add_argument("--find", metavar='PATTERN', help="Find a Google document")
   parser_docs.set_defaults(func=docs)
 
   parser_drive = subparsers.add_parser('drive', help='Work with Google Drive')
-  parser_drive.add_argument("--download", metavar='FILE', nargs=1, help="Download a document")
-  parser_drive.add_argument("--export-json", metavar='FILE', nargs=1, help="Export a document to JSON format")
-  parser_drive.add_argument("--export-pdf", metavar='FILE', nargs=1, help="Export a document to pdf format")
-  parser_drive.add_argument("--find-by-content", metavar='PATTERN', nargs=1, help="Find a Drive file containing content")
-  parser_drive.add_argument("--find-by-name", metavar='PATTERN', nargs=1, help="Find a Drive file by name")
+  parser_drive.add_argument("--download", metavar='FILE', help="Download a document")
+  parser_drive.add_argument("--export-json", metavar='FILE', help="Export a document to JSON format")
+  parser_drive.add_argument("--export-pdf", metavar='FILE', help="Export a document to pdf format")
+  parser_drive.add_argument("--find-by-content", metavar='PATTERN', help="Find a Drive file containing content")
+  parser_drive.add_argument("--find-by-name", metavar='PATTERN', help="Find a Drive file by name")
   parser_drive.add_argument("--list", action='store_true', help="List all Drive files you have access to")
   parser_drive.set_defaults(func=drive)
 
   parser_sheets = subparsers.add_parser('sheets', help='Work with Google Sheets')
-  parser_sheets.add_argument("--find", metavar='PATTERN', nargs=1, help="Find a Google spreadsheet")
+  parser_sheets.add_argument("--find", metavar='PATTERN', help="Find a Google spreadsheet")
   parser_sheets.set_defaults(func=sheets)
 
   args = parser.parse_args()
