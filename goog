@@ -1,11 +1,30 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 '''
 This is a command line utility to work with the Google API's for Drive, Docs, and Sheets.
+
+License: GPL
+Note: Some parts are taken/adapted from Google Quickstart sample code, I'm not sure
+      what license those parts are released under.
+
+Copyright (C) 2019  Mega Tonnage <m3gat0nn4ge@gmail.com>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 '''
 
 
 # import standard libraries
-from __future__ import print_function
 import argparse
 import csv
 import io
@@ -89,8 +108,6 @@ def docs(args):
   global CREDS
 
   print("[*] we're in the docs function")
-  if args.find:
-    print("[*] and you asked for the find function")
   return
 
 def drive(args):
@@ -205,8 +222,7 @@ def sheets(args):
     else:
       csv_name = args.get_range[0] + '.csv'
       try:
-        fh = open(csv_name, "wb")
-        #fh = open(csv_name, "w", newline="") # python3
+        fh = open(csv_name, "w", newline="")
         writer = csv.writer(fh)
         writer.writerows(values)
         fh.close()
@@ -224,7 +240,6 @@ def main():
   subparsers = parser.add_subparsers(help='Available sub-commands')
 
   parser_docs = subparsers.add_parser('docs', help='Work with Google Docs')
-  parser_docs.add_argument("--find", metavar='PATTERN', help="Find a Google document")
   parser_docs.set_defaults(func=docs)
 
   parser_drive = subparsers.add_parser('drive', help='Work with Google Drive')
