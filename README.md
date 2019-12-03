@@ -18,3 +18,6 @@ Goog is a python app so we need to install the Google client libraries for pytho
 
 The command above is for Fedora, use the appropriate command for your system.
 
+
+Logo: Photo by Daniel Reche from Pexels
+
