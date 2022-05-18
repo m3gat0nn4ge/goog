@@ -130,32 +130,6 @@ def drive(args):
   if args.find_by_content:
     drive_find("fullText contains '%s'" % args.find_by_content)
 
-  if args.download:
-    drive_find(query = "name = '%s'" % args.download, id_only = True)
-
-    if len(FILE_IDS) > 1:
-      print("[!] more than one document found with that name")
-      return
-    if len(FILE_IDS) == 0:
-      print("[!] no document found with that name")
-      return
-
-    drive_service = build('drive', 'v3', credentials=CREDS)
-    response = drive_service.files().export_media(fileId=FILE_IDS[0])
-    buff = io.BytesIO()
-    downloader = MediaIoBaseDownload(buff, response)
-    done = False
-    while done is False:
-      status, done = downloader.next_chunk()
-    
-    try:
-      fh = open(args.download, 'wb')
-      fh.write(buff.getvalue())
-      fh.close()
-    except:
-      print("[!] failed to save file")
-      return
-
   if args.export_pdf:
     drive_find(query = "name = '%s'" % args.export_pdf, id_only = True)
 
@@ -188,6 +162,9 @@ def drive(args):
 
     if len(FILE_IDS) > 1:
       print("[!] more than one document found with that name")
+      return
+    if len(FILE_IDS) == 0:
+      print("[!] no document found with that name")
       return
 
     drive_service = build('drive', 'v3', credentials=CREDS)
@@ -257,7 +234,6 @@ def main():
   parser_docs.set_defaults(func=docs)
 
   parser_drive = subparsers.add_parser('drive', help='Work with Google Drive')
-  parser_drive.add_argument("--download", metavar='FILE', help="Download a document")
   parser_drive.add_argument("--export-json", metavar='FILE', help="Export a document to JSON format")
   parser_drive.add_argument("--export-pdf", metavar='FILE', help="Export a document to pdf format")
   parser_drive.add_argument("--find-by-content", metavar='PATTERN', help="Find a Drive file containing content")
@@ -266,7 +242,7 @@ def main():
   parser_drive.set_defaults(func=drive)
 
   parser_sheets = subparsers.add_parser('sheets', help='Work with Google Sheets')
-  parser_sheets.add_argument("--get-csv", metavar=('FILE', 'RANGE'), nargs=2, help="Download all or range of data from a Google sheet. Range = 'sheet' or 'sheet!start_cell:end_cell'")
+  parser_sheets.add_argument("--get-csv", metavar=('FILE', 'RANGE'), nargs=2, help="Download all or range of data from a Google sheet. RANGE = 'sheet' or 'sheet!start_cell:end_cell'")
   parser_sheets.set_defaults(func=sheets)
 
   args = parser.parse_args()
