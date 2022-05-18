@@ -39,7 +39,7 @@ try:
   from google_auth_oauthlib.flow import InstalledAppFlow
   from google.auth.transport.requests import Request
 except:
-  print("One or more Google libraries were not found, try:\n  `pip install google-api-python-client google_auth_oauthlib`")
+  print("One or more Google libraries were not found, try:\n  pip install google-api-python-client google_auth_oauthlib google-auth-httplib2")
   exit(1)
 
 # If modifying these scopes, delete the goog.token.pickle file.
