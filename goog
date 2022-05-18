@@ -196,8 +196,12 @@ def sheets(args):
   global FILE_IDS
 
   if args.get_csv:
-    #drive_find("name contains '%s'" % args.get_csv[0], id_only = True)
-    drive_find(query = "name = '%s'" % args.export_csv[0], id_only = True)
+    # try exact match for name
+    drive_find(query = "name = '%s'" % args.get_csv[0], id_only = True)
+
+    # if that fails try for a partial match
+    if len(FILE_IDS) != 1:
+      drive_find("name contains '%s'" % args.get_csv[0], id_only = True)
 
     if len(FILE_IDS) > 1:
       print("[!] more than one document found with that name")
