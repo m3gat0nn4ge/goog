@@ -136,6 +136,9 @@ def drive(args):
     if len(FILE_IDS) > 1:
       print("[!] more than one document found with that name")
       return
+    if len(FILE_IDS) == 0:
+      print("[!] no document found with that name")
+      return
 
     drive_service = build('drive', 'v3', credentials=CREDS)
     response = drive_service.files().export_media(fileId=FILE_IDS[0])
@@ -158,6 +161,9 @@ def drive(args):
 
     if len(FILE_IDS) > 1:
       print("[!] more than one document found with that name")
+      return
+    if len(FILE_IDS) == 0:
+      print("[!] no document found with that name")
       return
 
     drive_service = build('drive', 'v3', credentials=CREDS)
@@ -208,23 +214,27 @@ def sheets(args):
   Work with Google sheets
   '''
   global CREDS
+  global FILE_IDS
 
-  if args.get_range:
-    drive_find(query = "name = '%s'" % args.get_range[0], id_only = True)
+  if args.get_csv:
+    drive_find("name contains '%s'" % args.get_csv[0], id_only = True)
 
     if len(FILE_IDS) > 1:
       print("[!] more than one document found with that name")
       return
+    if len(FILE_IDS) == 0:
+      print("[!] no document found with that name")
+      return
 
     sheets_service = build('sheets', 'v4', credentials=CREDS)
     sheet = sheets_service.spreadsheets()
-    response = sheet.values().get(spreadsheetId=FILE_IDS[0], range=args.get_range[1]).execute()
+    response = sheet.values().get(spreadsheetId=FILE_IDS[0], range=args.get_csv[1]).execute()
     values = response.get('values', [])
 
     if not values:
       print('No data found.')
     else:
-      csv_name = args.get_range[0] + '.csv'
+      csv_name = args.get_csv[0] + '.csv'
       try:
         fh = open(csv_name, "w", newline="")
         writer = csv.writer(fh)
@@ -233,7 +243,7 @@ def sheets(args):
       except:
         print("[!] failed to save file")
         return
- 
+
   return
 
 
@@ -256,7 +266,7 @@ def main():
   parser_drive.set_defaults(func=drive)
 
   parser_sheets = subparsers.add_parser('sheets', help='Work with Google Sheets')
-  parser_sheets.add_argument("--get-range", metavar=('FILE', 'RANGE'), nargs=2, help="Download a range of data from a Google sheet")
+  parser_sheets.add_argument("--get-csv", metavar=('FILE', 'RANGE'), nargs=2, help="Download all or range of data from a Google sheet. Range = 'sheet' or 'sheet!start_cell:end_cell'")
   parser_sheets.set_defaults(func=sheets)
 
   args = parser.parse_args()
