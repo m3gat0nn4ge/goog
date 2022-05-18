@@ -32,11 +32,15 @@ import os.path
 import pickle
 
 # Import Google libraries
-import googleapiclient.errors
-from googleapiclient.http import MediaIoBaseDownload
-from googleapiclient.discovery import build
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
+try:
+  import googleapiclient.errors
+  from googleapiclient.http import MediaIoBaseDownload
+  from googleapiclient.discovery import build
+  from google_auth_oauthlib.flow import InstalledAppFlow
+  from google.auth.transport.requests import Request
+except:
+  print("One or more Google libraries were not found, try:\n  `pip install google-api-python-client google_auth_oauthlib`")
+  exit(1)
 
 # If modifying these scopes, delete the goog.token.pickle file.
 SCOPES = ['https://www.googleapis.com/auth/drive.metadata.readonly',
