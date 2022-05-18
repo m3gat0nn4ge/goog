@@ -153,6 +153,7 @@ def drive(args):
       fh = open(pdf_name, 'wb')
       fh.write(buff.getvalue())
       fh.close()
+      print("[*] saved file as: %s" % pdf_name)
     except:
       print("[!] failed to save file")
       return
@@ -180,6 +181,7 @@ def drive(args):
       fh = open(json_name, 'wb')
       fh.write(buff.getvalue())
       fh.close()
+      print("[*] saved file as: %s" % json_name)
     except:
       print("[!] failed to save file")
       return
@@ -217,6 +219,7 @@ def sheets(args):
         writer = csv.writer(fh)
         writer.writerows(values)
         fh.close()
+        print("[*] saved file as: %s" % csv_name)
       except:
         print("[!] failed to save file")
         return
